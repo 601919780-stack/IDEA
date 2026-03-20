@@ -138,8 +138,7 @@
 
     <script>
         // ==========================================
-        // 在此处修改或添加您的图片路径
-        // 现在总共设置为 120 个元素，每个对应一个项目
+        // 配置图片路径
         // ==========================================
         const projectImages = [
             'img01.png',
@@ -176,7 +175,6 @@
 
         const palette = ['#FF2442', '#3A86FF', '#00D981', '#FFD166', '#8338EC', '#FF00FF', '#00FFFF', '#111111'];
         const projectAssets = [];
-        // 修改点：生成 120 个项目资产
         for(let i=0; i<120; i++) {
             projectAssets.push({
                 id: i,
@@ -252,7 +250,6 @@
             const heightAtZ0 = 2 * Math.tan(vFOV / 2) * camera.position.z;
             wuPerPx = heightAtZ0 / window.innerHeight;
 
-            // 修改点：生成 120 个网格单元
             for (let i = 0; i < 120; i++) {
                 const data = projectAssets[i];
                 const cell = document.createElement('div');
@@ -263,28 +260,34 @@
                 worksGrid.appendChild(cell);
             }
 
-            // 修改点：初始化 120 个 3D 元素
             for (let i = 0; i < 120; i++) createIdeaMesh(i);
             animate();
         }
 
         function createIdeaMesh(index) {
             const projectData = projectAssets[index];
-            // 数量变多了，稍微减小一点半径以防画面太挤
             const radius = 1.8 + Math.random() * 1.8; 
             
             let texture;
             if (textureCache.has(projectData.imgUrl)) {
                 texture = textureCache.get(projectData.imgUrl);
             } else {
-                texture = textureLoader.load(projectData.imgUrl);
+                texture = textureLoader.load(
+                    projectData.imgUrl,
+                    undefined,
+                    undefined,
+                    (err) => { console.error("图片加载失败: " + projectData.imgUrl); }
+                );
                 texture.minFilter = THREE.LinearFilter;
                 textureCache.set(projectData.imgUrl, texture);
             }
 
-            const geometry = new THREE.CircleGeometry(radius, 32);
+            // 修改点：使用 PlaneGeometry 替代 CircleGeometry，实现图片完整展示
+            const geometry = new THREE.PlaneGeometry(radius * 2, radius * 2);
+            
             const material = new THREE.MeshBasicMaterial({ 
                 map: texture, 
+                color: 0xffffff,
                 transparent: true, 
                 opacity: 0,
                 side: THREE.DoubleSide
@@ -342,7 +345,7 @@
                     const targetX = (rect.left + rect.width / 2 - window.innerWidth / 2) * wuPerPx;
                     const targetY = -(rect.top + rect.height / 2 - window.innerHeight / 2) * wuPerPx;
                     d.targetPos.set(targetX, targetY, 0);
-                    d.targetScale = 3.5; // 针对 120 个元素稍微减小 WORKS 模式的缩放比例
+                    d.targetScale = 3.5; 
                 }
             });
             worksContainer.scrollTop = currentScroll;
